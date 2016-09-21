@@ -17,7 +17,7 @@ class Asset(metaclass=ABCMeta):
                 func = getattr(self, "_get_" + modelname + "_price")
             except AttributeError:
                 raise NotImplementedError("no analytical method implemented "\
-                                          "for option %s with model %s." % \
+                                          "for asset %s with model %s." % \
                                           (type(self).__name__, modelname))
             return func(date, price, model)
         else: # Monte Carlo

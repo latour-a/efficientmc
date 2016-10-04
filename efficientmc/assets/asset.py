@@ -32,10 +32,7 @@ class Asset(metaclass=ABCMeta):
                                           (type(self).__name__, modelname))
             return func(date, price, model)
         else: # Monte Carlo
-            if not np.array(price).shape and nsims > 0:
-                price = price + np.zeros((nsims))
-            values = self.computepayoff(date, price, model)
-            return np.mean(values)
+            raise NotImplementedError
 
     def getdelta(self, date, price, model, analytical=False, simulator=None):
         """

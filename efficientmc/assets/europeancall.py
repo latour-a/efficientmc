@@ -28,6 +28,12 @@ class EuropeanCall(Asset):
         else:
             return 0.
 
+    def getdates(self, begin):
+        if begin <= self.maturity:
+            return [self.maturity]
+        else:
+            return []
+
     def _get_BlackScholes_price(self, date, price, model):
         """
         Calcule le prix de l'option dans le cadre du modèle de Black-Scholes.

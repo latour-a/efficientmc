@@ -83,3 +83,16 @@ class Asset(metaclass=ABCMeta):
             Modèle de prix utilisé pour simuler les prix `prices`.
         """
         pass
+
+    @abstractmethod
+    def getdates(self, begin):
+        """
+        Renvoie les dates supérieures ou égales à `begin` pour lesquelles
+        l'actif verse (ou est susceptible de verser) un cashflow.
+
+        Paramètres
+        ----------
+        begin : date
+            Limite inférieure de la liste de dates à renvoyer.
+        """
+        pass

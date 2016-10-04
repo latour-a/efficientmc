@@ -5,7 +5,7 @@ class PriceModel(metaclass=ABCMeta):
     "Modèle de prix (classe abstraite)."
 
     @abstractmethod
-    def simulate(self, prevdate, prevprices date):
+    def simulate(self, prevdate, prevprices, date):
         """
         Simule des prix dans le modèle.
 

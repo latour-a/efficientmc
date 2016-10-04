@@ -5,23 +5,21 @@ class PriceModel(metaclass=ABCMeta):
     "Modèle de prix (classe abstraite)."
 
     @abstractmethod
-    def simulate(self, prevdate, prevprices, date):
+    def simulate(self, date, prevdate, prevprices, **kwargs):
         """
         Simule des prix dans le modèle.
 
         Paramètres
         ----------
+        date : date
+            Date à laquelle simuler les prix.
         prevdate : date
             Date correspondant à la précédente simulation.
         prevprices : double ou numpy.array
             Prix simulés pour `prevdate`.
-        date : date
-            Date à laquelle simuler les prix.
+        kwargs
+            Arguments optionnels.
         """
-        #TODO: pourquoi est-ce que ce n'est pas une méthode à part qui mange
-        # un modèle de prix ? En effet, on va vouloir un simulateur qui
-        # implèmente un cache... mais c'est quelque chose de tout à fait
-        # différent du modèle en lui-même.
         pass
 
     @abstractmethod

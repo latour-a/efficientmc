@@ -21,17 +21,11 @@ class BlackScholes(PriceModel):
         self.rate = rate
         self.sigma = sigma
 
-    def simulate(self, prevdate, prevprices, date):
-        #TODO: la gestion de la discrétisation en temps est à améliorer
-        # (notamment pour gérer le CIR du Heston).
-        #TODO: faire un décorateur pour ces vérifs là.
+    def simulate(self, date, prevdate, prevprices, gnoises):
         if prevdate < date:
             dt = date - prevdate
-            #TODO: on ne peut pas mettre les bruits là-dedans (cas des variables
-            # antithétiques...).
-            noises = np.random.randn(*(prevprices.shape))
             prices = prevprices * np.exp((self.rate - 0.5 * self.sigma**2) * dt\
-                                         + self.sigma * np.sqrt(dt) * noises)
+                                         + self.sigma * np.sqrt(dt) * gnoises)
             return prices
         elif prevdate == date:
             return prevprices

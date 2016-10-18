@@ -72,9 +72,9 @@ def antithetic_randn(nnoises, nsims):
 
     Paramètres :
     ------------
-    nnoises
+    nnoises : entier positif
         Nombre de bruits à simuler.
-    nsims
+    nsims : entier positif, pair
         Nombre de simulations à effectuer par prix.
     """
     raise NotImplementedError

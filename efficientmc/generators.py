@@ -63,3 +63,18 @@ class GaussianGenerator:
             keyidx = self.corrkeys.index(key)
             res[idx, :] = noises[keyidx, :]
         return res
+
+def antithetic_randn(nnoises, nsims):
+    """
+    Renvoie un tableau de bruits gaussiens non corrélés :math:`(G_{_i,j})`
+    de taille `(nnoises, nsims)`, et tel que, pour tout :math:`i` :
+        :math:`\forall 1 \leq j \leq n / 2, G_{i,n/2+j} = -G_{i,j}`
+
+    Paramètres :
+    ------------
+    nnoises
+        Nombre de bruits à simuler.
+    nsims
+        Nombre de simulations à effectuer par prix.
+    """
+    raise NotImplementedError

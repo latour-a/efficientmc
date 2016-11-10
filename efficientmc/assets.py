@@ -61,7 +61,7 @@ class EuropeanCall:
             return 0.
 
     @timecached
-    def get_volume(self, date, market):
+    def getvolume(self, date, market):
         """
         Renvoie les volumes exercés au titre de l'option sur le marché
         `market` à la date `date`.

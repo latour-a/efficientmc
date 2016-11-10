@@ -77,14 +77,11 @@ def antithetic_randn(nnoises, nsims):
     nsims : entier positif, pair
         Nombre de simulations à effectuer par prix.
     """
-    
-    n = nsims
-    G = np.empty((nnoises,nsims))
-    
-    for i in range(nnoises):
-        for j in range(1,int(n/2)):
-            G[i,j] = np.random.randn()
-            G[i, int(n/2+j)] = (-G[i,j]) 
-    return G
-    
-    raise NotImplementedError
+    if nsims % 2 != 0:
+        raise ValueError("the number of simulations used with antithetic "\
+                         "variables should be even.")
+    half = int(0.5 * nsims)
+    noises = np.empty((nnoises,nsims))
+    noises[:, :half] = np.random.randn(nnoises, half)
+    noises[:, half:] = -noises[:, :half]
+    return noises

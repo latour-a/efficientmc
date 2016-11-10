@@ -59,3 +59,16 @@ class EuropeanCall:
            return self.market.getdf(date) * self.getcf(date)
         else:
             return 0.
+
+    @timecached
+    def get_volume(self, date, market):
+        """
+        Renvoie les volumes exercés au titre de l'option sur le marché
+        `market` à la date `date`.
+        """
+        if market == self.market and date == self.maturity:
+            #FIXME: même remarque que pour `getcf`.
+            prices = self.market.getspot(date)
+            return np.where(prices > self.strike, 1., 0.)
+        else:
+            return 0.

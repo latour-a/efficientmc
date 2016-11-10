@@ -35,9 +35,7 @@ class EuropeanCall:
         return [self.maturity]
 
     def getmarkets(self):
-        """
-        Renvoie l'ensemble des marchés auxquels est exposé l'actif.
-        """
+        "Renvoie l'ensemble des marchés auxquels est exposé l'actif."
         return [self.market]
 
     @timecached

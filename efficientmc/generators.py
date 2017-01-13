@@ -1,5 +1,6 @@
 import numpy as np
 from efficientmc.utils import timecached, DateCache
+import sobol_seq
 
 class GaussianGenerator:
     "Générateur de bruits gaussiens corrélés."
@@ -85,3 +86,16 @@ def antithetic_randn(nnoises, nsims):
     noises[:, :half] = np.random.randn(nnoises, half)
     noises[:, half:] = -noises[:, :half]
     return noises
+
+def sobol(nnoises,nsims):
+    """
+    Renvoie un tableau de valeurs générés par la suite de Sobol
+    de taille (nnoises,nsims)
+    """
+    noises = np.empty((nsims))
+    """
+    Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
+    pour générer des variables quasi-aléatoires suivant une loi normale
+    """
+    noises=sobol_seq.i4_sobol_generate_std_normal(nnoises,nsims)
+    return (noises.reshape(nnoises,nsims))

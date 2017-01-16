@@ -1,11 +1,13 @@
 \documentclass[12pt]{report}
+
 \usepackage[utf8x]{inputenc}
-\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[frenchb]{babel}
+\usepackage{lmodern}
+
+\usepackage{amsmath,amsthm,amssymb}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
-\usepackage[francais]{babel}  
-\usepackage{amsthm}
-\usepackage{amssymb}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{verbatim}
@@ -31,17 +33,17 @@
 \begin{document}
 
 \begin{titlepage}
-	
+
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
 
 \begin{figure}
 	\begin{minipage}[t]{.5\linewidth}
 	\centering
-	\includegraphics[scale=0.5]{esilv_logo.png}\\[1cm] 
-	\end{minipage} 
+	\includegraphics[scale=0.5]{esilv_logo.png}\\[1cm]
+	\end{minipage}
 	\begin{minipage}[t]{.5\linewidth}
 	\includegraphics[scale=1.4]{edf_logo.png}\\[1cm]
-	\end{minipage} 
+	\end{minipage}
 \end{figure}
 
 \center % Center everything on the page
@@ -63,9 +65,9 @@
 		\emph{Team 16:}\\
 		Anthony \textsc{Courillon} % Your name
 		\\
-		Denis \textsc{Barranco} 
+		Denis \textsc{Barranco}
 		\\
-		Ousman \textsc{Asadullah} 
+		Ousman \textsc{Asadullah}
 		\\
 		Hicham \textsc{Kortbi} % Your name
 	\end{flushleft}
@@ -100,94 +102,110 @@ réalisation d’un pricer d’actifs énergétiques proposé par notre partenai
 Un certain nombre d'actifs utilisés dans le domaine de l'énergie (par exemple les
 centrales électriques) se prête facilement à une valorisation sous la forme de
 produits dérivés complexes, de nature américaine (contrairement à une option
-européenne, l'option américaine peut être exercée n'importe quand). 
+européenne, l'option américaine peut être exercée n'importe quand).
 
 Le pricing de ces actifs met en oeuvre des méthodes numériques avancées qui
 peuvent être coûteuses en temps de calcul. Lorsque ces méthodes sont fondées sur
 une simulation Monte-Carlo (par exemple l'algorithme de Longstaff-Schwartz), on a
 intérêt à employer des techniques de réduction de variance pour accélérer la
-convergence de l'algorithme - et donc réduire le temps de calcul. 
+convergence de l'algorithme - et donc réduire le temps de calcul.
 
 Cependant, l'efficacité de ces techniques dépend généralement du payoff de l'actif
 qu'on cherche à valoriser. L'objectif de ce projet est donc d'implémenter et de
 tester différentes méthodes de réduction de variance appliquées à des actifs
 énergétiques, afin d'identifier les méthodes les plus pertinentes.
 
-Nous allons réaliser ce pricer soous Python et nous allons utilize exclusivement
-ces 3 logiciels afin de réaliser ce projet:\\
-- Anaconda\\
-- LiClipse\\
-- Github
+Nous allons réaliser ce pricer soous Python et nous allons utiliser exclusivement
+ces 3 logiciels afin de réaliser ce projet:
+\begin{itemize}
+	\item Anaconda ;
+	\item LiClipse ;
+	\item Github.
+\end{itemize}
 
 \chapter{Evaluation du prix d'un produit dérivé par simulation}
 
 \section{Principes des méthodes de Monte Carlo}
 
 Le prix d'un produit dérivé d'un sous-jacent $X=(X_t)_{t\geq0}$ de payoff actualisé f(X), d'un marché financier sous probabilité risque neutre, s’écrit
-comme l’espérance des flux futurs actualisés qu’il génère, $e_p$:\newline
-\begin{center}
-	$e_p$=$\text{E}[f(X)]$ \hspace{3cm} (1)\newline
-\end{center}
+comme l’espérance des flux futurs actualisés qu’il génère, $e_p$ :
+\begin{equation}
+	e_p = \mathbb{E}[f(X)]
+\end{equation}
 Il faut donc évaluer cette espérance pour connaître le prix d’un produit dérivé.
 Nous allons utilize les méthodes de Monte Carlo qui consiste à simuler un grand
 nombre de realisations, N indépendantes et identiquements distribuées, de f(X),
 $f(X^i)$ avec $i\in \mathbb{N}$, puis on calcule chaque $f(X^i)$.
 
-Enfin, on prend la moyenne empirique de ces réalisations, $\bar{e_N}$ estimateur de $e_p$:\newline
-\begin{center}
-	$\bar{e_N}$=$\frac{1}{N}\sum_{i=1}^{N} f(X^i) \xrightarrow[N\rightarrow{\infty}]{\text{p.s}}$
-	$e_p$ \hspace{1cm}avec $\text{E}[|f(X)|]<\infty$ \hspace{1cm} (2)\newline
-\end{center}
+Enfin, on prend la moyenne empirique de ces réalisations, $\bar{e_N}$ estimateur de $e_p$ :
+\begin{equation}
+	\bar{e_N}=\frac{1}{N}\sum_{i=1}^{N} f(X^i) \xrightarrow[N\rightarrow{\infty}]{\text{p.s}} e_p \text{~avec~} \mathbb{E}[|f(X)|]<\infty
+\end{equation}
 la loi des grand nombres assure la convergence de $\bar{e_N}$ vers $e_p$.
 Autrement dit, pour N assez grand, $\bar{e_N} \simeq e_p$.
 
 \section{Limite pratique des méthodes de Monte Carlo}
 
-\begin{theo}
-	\emph{(Théorème Central Limite)}
-	\label{TCL}\newline
+\begin{theo}[Théorème Central Limite]\label{TCL}
 	Nous allons utilisé le cas où on ne connait pas la loi de $e_p$.
-	Si la loi de $e_p$ est inconnue (ou non normale), alors $\bar{e_N}\hookrightarrow N(\mu,\frac{\sigma}{\sqrt{N}})$ pour N assez grand, avec $\sigma$ = $\sqrt{(Var(f(X)))}$  et $\mu=e_p =\text{E}[f(X)]$  alors on a:
-	\begin{center}
-		$\frac{\sqrt{N}(\bar{X}_n-\mu)}{\sigma}\hookrightarrow N(0,1)$
-	\end{center}
+	Si la loi de $e_p$ est inconnue (ou non normale), alors $\bar{e_N}\hookrightarrow N(\mu,\frac{\sigma}{\sqrt{N}})$ pour N assez grand, avec $\sigma$ = $\sqrt{(Var(f(X)))}$  et $\mu=e_p =\mathbb{E}[f(X)]$  alors on a:
+	\begin{equation}
+		\frac{\sqrt{N}(\bar{X}_n-\mu)}{\sigma}\hookrightarrow N(0,1)
+	\end{equation}
 \end{theo}
 
-Donc le théorème central limite permet d'avoir l'approximation de l'erreur réalisée:\\\\
-$\sqrt{N}(\frac{1}{N}\sum_{i=1}^{N}f(X^i)-e_p)\hookrightarrow N(0,\sqrt{Var(f(X))})$ \hspace{2cm} (3)
-\begin{center}
-	 ou\newline
-\end{center}
-$\sqrt{N}(\bar{e_N}-e_p)\hookrightarrow N(0,\sqrt{Var(f(X))})$ \hspace{4cm} (3bis)
-\\\\
-Cela montre le problème du nombre de simulations N nécessaires pour avoir un bon estimateur de $e_p$, plus la variance de $f(X^i)$ est élevé, plus N doit être grand.\newline
-Or N grand a pour conséquence une augmentation du temps de calcul.\newline
-Donc plus $Var(f(X^i))$, plus l’obtention de l’évaluation de $e_p$ demandera un temps de calcul important.\newline
-Il est alors intéressant d’employer des techniques de réduction de variance pour accélérer la convergence de l’algorithme et donc réduire le temps de calcul.\newline
-C’est l’un des problèmes que nous allons tenter de résoudre dans la réalisation de notre pricer.\newline
+Donc le théorème central limite permet d'avoir l'approximation de l'erreur réalisée:
+\begin{equation}
+	\label{eq:approximation-erreur}
+	\sqrt{N}(\frac{1}{N}\sum_{i=1}^{N}f(X^i)-e_p)\hookrightarrow N(0,\sqrt{Var(f(X))})
+\end{equation}
+ou :
+\begin{equation}
+	\sqrt{N}(\bar{e_N}-e_p)\hookrightarrow N(0,\sqrt{Var(f(X))})
+\end{equation}
+
+Cela montre le problème du nombre de simulations N nécessaires pour avoir un bon estimateur de $e_p$, plus la variance de $f(X^i)$ est élevé, plus N doit être grand.
+
+Or N grand a pour conséquence une augmentation du temps de calcul. Donc plus $Var(f(X^i))$, plus l’obtention de l’évaluation de $e_p$ demandera un temps de calcul important.
+
+Il est alors intéressant d’employer des techniques de réduction de variance pour accélérer la convergence de l’algorithme et donc réduire le temps de calcul. C’est l’un des problèmes que nous allons tenter de résoudre dans la réalisation de notre pricer.
+
 Nous allons voir les différentes techniques de réduction de variance et tenter de les implémenter dans notre pricer dans le chapitre 2 de ce document.
-\\\\\\\\
+
 \section{Contrôle de la convergence}
 
-Il faut évaluer l’erreur d’approximation de (3)  grâce à la
-construction d’un intervalle de confiance:\\\\
-$Z = \frac{\sqrt{N}}{\sqrt{Var(f(X))}} (\frac{1}{N}\sum_{i=1}^{N}f(X^i)-e_p)\hookrightarrow N(0,1)$\\\\
-En supposant que la variance est connue, on a:\\\\
-$\mathbb{P}(-u\leq$ Z $\leq u)$ =$ \alpha$ avec u fractile d'ordre 1-$\frac{\alpha}{2}$ de la N(0,1)\\\\
-Ce qui revient à:\\\\
-$\mathbb{P}(-u$ $\frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N}\leq e_p \leq u$ $\frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N})$ =$ \alpha$ \\\\
-IC$_\alpha(e_p)$ = [-u $\frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N};u$ $\frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N}]$ \hspace{2cm} (5)\\\\
-L’erreur donné par un intervalle de confiance est:\\\\
-$\mathbb{P}(e_p\in IC_\alpha ) \simeq \alpha$ \\\\
-Il a un problème c’est qu’on ne peut appliquer cette méthode que si la variance de f(X), Var(f(X)) est connue. Or ici, Var(f(X)) est inconnue, et il faut l’estimer grâce à un estimateur.\\ On peut construire un estimateur non biaisé tel que celui-ci:\\\\
-$\bar{v_N}$ = $\sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(f(X^i)-\bar{e_N})^2}$ \\\\\\\\\\\\\\\\\\\\
+Il faut évaluer l’erreur d’approximation de \eqref{eq:approximation-erreur}  grâce à la construction d’un intervalle de confiance :
+\begin{equation}
+	Z = \frac{\sqrt{N}}{\sqrt{Var(f(X))}} (\frac{1}{N}\sum_{i=1}^{N}f(X^i)-e_p)\hookrightarrow N(0,1)
+\end{equation}
+En supposant que la variance est connue, on a :
+\begin{equation}
+	\mathbb{P}(-u\leq Z \leq u) = \alpha
+\end{equation}
+avec u fractile d'ordre 1-$\frac{\alpha}{2}$ de la N(0,1). Ce qui revient à :
+\begin{equation}
+	\mathbb{P}(-u \frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N}\leq e_p \leq u \frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N}) = \alpha
+\end{equation}
+et donc :
+\begin{equation}
+	\text{IC}_\alpha(e_p) = [-u \frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N};u \frac{\sqrt{Var(f(X))}}{\sqrt{N}}+\bar{e_N}]
+\end{equation}
+L’erreur donné par un intervalle de confiance est :
+\begin{equation}
+	\mathbb{P}(e_p\in IC_\alpha ) \simeq \alpha
+\end{equation}
+Il a un problème c’est qu’on ne peut appliquer cette méthode que si la variance de f(X), Var(f(X)) est connue. Or ici, Var(f(X)) est inconnue, et il faut l’estimer grâce à un estimateur.
 
-Voici l’implémentation sous Python de tout ce que nous avons énoncé dans
-cette partie I, on a pris  $\alpha$ =0.95 pour la contruction des intervalles de confiance.\\\\
+On peut construire un estimateur non biaisé tel que celui-ci :
+\begin{equation}
+	\bar{v_N} = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(f(X^i)-\bar{e_N})^2}
+\end{equation}
+
+Voici l’implémentation sous Python de tout ce que nous avons énoncé dans cette partie I, on a pris  $\alpha$ =0.95 pour la contruction des intervalles de confiance.
 \begin{verbatim}
 MCResults = namedtuple('MCResults', ('mean', 'iclow', 'icup'))
 
-def runmc(*allassets):	
+def runmc(*allassets):
 """
 Calcule par simulation Monte-Carlo les cash-flows des actifs de
 `allassets`, sous la probabilité risque-neutre.
@@ -201,8 +219,6 @@ volumes = {asset.name: {m.name: {} for m in asset.getmarkets()} \
 for asset in allassets}
 alldates = assetsdates.union(marketsdates)
 for date in alldates:
-#FIXME: utiliser une notion de `computation` pour sauvegarder et
-# aggréger les résultats au fur et à mesure.
 # Mise à jour des marchés :
 for market in allmarkets:
 market.simulate(date)
@@ -212,11 +228,9 @@ earnings[asset.name][date] = asset.get_discounted_cf(date)
 for market in asset.getmarkets():
 volumes[asset.name][market.name][date] = asset.getvolume(date,
 market)
-#FIXME: on peut avoir besoin d'autre chose que du spot.
 if date not in prices[market.name]:
 prices[market.name][date] = market.getspot(date)
 earnings = pd.Panel(earnings).transpose(1, 0, 2)
-#FIXME: utiliser xarray.
 volumes = {key: pd.Panel(value).transpose(1, 0, 2)
 for key, value in volumes.items()}
 prices = pd.Panel(prices).transpose(1, 0, 2)

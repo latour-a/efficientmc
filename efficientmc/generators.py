@@ -3,6 +3,7 @@ from efficientmc.utils import timecached, DateCache
 import sobol_seq
 import ghalton as gh
 from scipy.stats import norm
+from math import ceil, fmod, floor, log
 
 class GaussianGenerator:
     "Générateur de bruits gaussiens corrélés."
@@ -148,3 +149,30 @@ def sobol(nnoises,nsims):
     # pour générer des variables quasi-aléatoires suivant une loi normale.
     noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
     return noises.reshape(nnoises, nsims)
+
+def halton2(dim, nsims):
+    """
+    la fonction ne crash plus.    
+    Version 2 de la suite d'halton sans la librairie Python existante.
+    """
+    h = np.empty(nsims * dim)
+    h.fill(np.nan)
+    p = np.empty(nsims)
+    p.fill(np.nan)
+    Base = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
+    lognsims = log(nsims + 1)
+    for i in range(dim):
+        base = Base[i]
+        n = int(ceil(lognsims / log(base)))
+        for t in range(n):
+            p[t] = pow(base, -(t + 1) )
+        for j in range(nsims):
+            d = j + 1
+            somme = fmod(d, base) * p[0]
+            for t in range(1, n):
+                d = floor(d / base)
+                somme += fmod(d, base) * p[t]
+
+            h[j*dim + i] = somme
+
+    return norm.ppf(h.reshape(dim, nsims))

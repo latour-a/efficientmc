@@ -11,21 +11,78 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{verbatim}
+\usepackage{grffile}
 
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{darkWhite}{rgb}{0.94,0.94,0.94}
 
-\lstset{ %
-	backgroundcolor=\color{white},   % choose the background color
-	basicstyle=\footnotesize,        % size of fonts used for the code
-	breaklines=true,                 % automatic line breaking only at whitespace
-	captionpos=b,                    % sets the caption-position to bottom
-	commentstyle=\color{mygreen},    % comment style
-	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
-	keywordstyle=\color{blue},       % keyword style
-	stringstyle=\color{mymauve},     % string literal style
+\lstset{
+	aboveskip=3mm,
+	belowskip=-2mm,
+	backgroundcolor=\color{darkWhite},
+	basicstyle=\footnotesize,
+	breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	commentstyle=\color{red},
+	deletekeywords={...},
+	escapeinside={\%*}{*)},
+	extendedchars=true,
+	framexleftmargin=16pt,
+	framextopmargin=3pt,
+	framexbottommargin=6pt,
+	frame=tb,
+	keepspaces=true,
+	keywordstyle=\color{blue},
+	language=C,
+	literate=
+	{²}{{\textsuperscript{2}}}1
+	{⁴}{{\textsuperscript{4}}}1
+	{⁶}{{\textsuperscript{6}}}1
+	{⁸}{{\textsuperscript{8}}}1
+	{€}{{\euro{}}}1
+	{é}{{\'e}}1
+	{è}{{\`{e}}}1
+	{ê}{{\^{e}}}1
+	{ë}{{\¨{e}}}1
+	{É}{{\'{E}}}1
+	{Ê}{{\^{E}}}1
+	{û}{{\^{u}}}1
+	{ù}{{\`{u}}}1
+	{â}{{\^{a}}}1
+	{à}{{\`{a}}}1
+	{á}{{\'{a}}}1
+	{ã}{{\~{a}}}1
+	{Á}{{\'{A}}}1
+	{Â}{{\^{A}}}1
+	{Ã}{{\~{A}}}1
+	{ç}{{\c{c}}}1
+	{Ç}{{\c{C}}}1
+	{õ}{{\~{o}}}1
+	{ó}{{\'{o}}}1
+	{ô}{{\^{o}}}1
+	{Õ}{{\~{O}}}1
+	{Ó}{{\'{O}}}1
+	{Ô}{{\^{O}}}1
+	{î}{{\^{i}}}1
+	{Î}{{\^{I}}}1
+	{í}{{\'{i}}}1
+	{Í}{{\~{Í}}}1,
+	morekeywords={*,...},
+	numbers=left,
+	numbersep=10pt,
+	numberstyle=\tiny\color{black},
+	rulecolor=\color{black},
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	stepnumber=1,
+	stringstyle=\color{gray},
+	tabsize=4,
+	title=\lstname,
 }
 
 \newtheorem{theo}{Théorème}[section]
@@ -202,62 +259,264 @@ On peut construire un estimateur non biaisé tel que celui-ci :
 \end{equation}
 
 Voici l’implémentation sous Python de tout ce que nous avons énoncé dans cette partie I, on a pris  $\alpha$ =0.95 pour la contruction des intervalles de confiance.
-\begin{verbatim}
-MCResults = namedtuple('MCResults', ('mean', 'iclow', 'icup'))
+\begin{lstlisting}
+class GaussianGenerator:
+"Générateur de bruits gaussiens corrélés."
 
-def runmc(*allassets):
+def __init__(self, nsims, corrmatrix, corrkeys, randomfunc):
 """
-Calcule par simulation Monte-Carlo les cash-flows des actifs de
-`allassets`, sous la probabilité risque-neutre.
-"""
-allmarkets = set([m for asset in allassets for m in asset.getmarkets()])
-marketsdates = set([d for market in allmarkets for d in market.getdates()])
-assetsdates = set([d for asset in allassets for d in asset.getdates()])
-earnings = {asset.name: {} for asset in allassets}
-prices = {market.name: {} for market in allmarkets}
-volumes = {asset.name: {m.name: {} for m in asset.getmarkets()} \
-for asset in allassets}
-alldates = assetsdates.union(marketsdates)
-for date in alldates:
-# Mise à jour des marchés :
-for market in allmarkets:
-market.simulate(date)
-# Mise à jour des objets :
-for asset in allassets:
-earnings[asset.name][date] = asset.get_discounted_cf(date)
-for market in asset.getmarkets():
-volumes[asset.name][market.name][date] = asset.getvolume(date,
-market)
-if date not in prices[market.name]:
-prices[market.name][date] = market.getspot(date)
-earnings = pd.Panel(earnings).transpose(1, 0, 2)
-volumes = {key: pd.Panel(value).transpose(1, 0, 2)
-for key, value in volumes.items()}
-prices = pd.Panel(prices).transpose(1, 0, 2)
-return earnings, volumes, prices
+Initialise une nouvelle instance de la classe `GaussianGenerator`.
 
-def getmtm(cf, alpha=0.95):
+Paramètres :
+------------
+nsims : entier positif
+Nombre de simulations à générer.
+corrmatrix : matrice carrée
+Matrice de corrélation entre les différents bruits gaussiens
+à simuler. La matrice doit être définie positive.
+corrkeys
+Liste des identifiants associés aux différentes lignes / colonnes
+de la matrice de corrélation `corrmatrix`. Les identifiants doivent
+être donnés dans l'ordre dans lequel les bruits correspondants
+apparaissent dans `corrmatrix`.
+randomfunc
+Fonction permettant de générer des bruits gaussiens indépendants
+(typiquement `np.random.randn`).
 """
-Calcule la MtM (i.e. : les cash-flows moyens réalisés et un intervalle
-de confiance) de chaque actif listé dans `cf`.
+self.corrmatrix = corrmatrix
+self.corrkeys = corrkeys
+self.nsims = nsims
+self.randomfunc = randomfunc
+self.cache = DateCache()
+try:
+np.linalg.cholesky(self.corrmatrix)
+except np.linalg.LinAlgError:
+raise np.linalg.LinAlgError("the correlation matrix is not "\
+"positive definite.") from None
 
-Paramètres
-----------
-cf : pandas.Panel
-Cash-flows réalisés pour chaque simulation (`items`), chaque
-actif (`major_axis`) et chaque date (`minor_axis`).
-alpha : double compris entre 0. et 1.
-Quantile à utiliser pour le calcul des intervalles de confiances.
+@property
+def nnoises(self):
+"Nombre de bruits gaussiens distincts à simuler."
+return self.corrmatrix.shape[0]
+
+@timecached
+def getallnoises(self, date):
 """
-nsims = cf.shape[0]
-cumvalues = cf.sum(axis=2)
-mean = cumvalues.mean(axis=1)
-std = cumvalues.std(axis=1)
-res = {}
-for key, val in mean.items():
-res[key] = mkmcresults(val, std[key], nsims)
+Renvoie `self.nsims` réalisations de `self.nnoises` bruits
+gaussiens corrélés.
+"""
+whitenoises = self.randomfunc(self.nnoises, self.nsims)
+noises = np.dot(np.linalg.cholesky(self.corrmatrix), whitenoises)
+return noises
+
+@timecached
+def getnoises(self, date, keys):
+"""
+Renvoie un tableau de taille `(len(keys), self.nsims)` de bruits
+gaussiens corrélés correspondants aux aléas identifiés par les
+clefs `keys`.
+"""
+noises = self.getallnoises(date)
+res = np.empty((len(keys), self.nsims))
+for idx, key in enumerate(keys):
+keyidx = self.corrkeys.index(key)
+res[idx, :] = noises[keyidx, :]
 return res
 
-\end{verbatim}
+\end{lstlisting}
 
+\chapter{Méthodes de réduction de la variance}
+\section{Variables antitthétiques}
+L’idée des variables antithétiques repose sur la symétrie de la
+distribution de la loi uniforme et la correlation entre 2
+variables aléatoires.
+\subsection{Idées globales}
+Calculer $\theta$ = $\text{E}[Y]$=$\text{E}[f(X)]$\\
+$\text{E}[Y]$=$\frac{1}{2}$$\text{E}[Y_1]+\text{E}[Y_2]=\text{E}[\frac{Y_1+Y_2}{2}]$\\
+Var($\frac{Y_1+Y_2}{2})=\frac{Var(Y_1)+Var(Y_2)+2Cov(Y_1,Y_2)}{4}$\\
+- Si $Y_1$ et $Y_2$ sont indépendantes, Cov($Y_1,Y_2$)=0\\
+-Si Cov($Y_1,Y_2$)<0, alors $Var(\frac{Y_1+Y_2}{2})<Var(\frac{Y}{2})$ donc la variante est réduite si $Y_1$ et $Y_2$ sont corrélés négativements, Cov($Y_1,Y_2)<$0\\\\
+\subsection{Mathématiquement}
+On veut estimer $\text{E}[Y]$ en utilisant l'implémentation d'échantillons antithétiques c'est-à-dire: $(Y_1,Y_{1ant}),(Y_2,Y_{2ant}),...,(Y_N,Y_{Nant})$  avec $\forall$ i $\in$ $\mathbb{N}$, $Y_i$ et $Y_{iant}$ de même loi de distribution et i.i.d. (indépendantes et identiquement distribuées).\\
+L'estimateur de $\text{E}[Y]$ est simplement la moyene des 2N réalisations:\\\\
+$\bar{e_{Nant}}$=$\frac{1}{2N}(\sum_{i=1}^{N}Y_i +\sum_{i=1}^{N}Y_{iant})$=$\frac{1}{N}\sum_{i=1}^{N}(\frac{Y_i+Y_{iant}}{2})$\\\\
+En utilisant les mêmes méthodes que dans le chapitre I, on par TCL:\\
+\begin{center}
+	$\frac{\sqrt{N}(\bar{e}_{Nant}-\text{E}[Y])}{\sqrt{Var(Y)}}$
+\end{center}
+On pose $\sigma^2_{ant}=Var(Y)=Var(\frac{Y_i+Y_{iant}}{2})$\\\\
+Comme nous venons de le voir dans les idées globales:\\\\
+$\sigma^2_{ant}=\frac{Var(Y_i)+Var(Y_{iant})+2Cov(Y_i,Y_{iant})}{4}$\\\\
+$ =\frac{2Var(Y_i)+2Cov(Y_i,Y_{iant})}{4}$ car $Y_i $ et $ Y_{iant}$ sont de même loi de distribution\\\\
+$=\frac{Var(Y_i)+2Cov(Y_i,Y_{iant})}{2}$\\\\
+Alors, si $Cov(Y_i,Y_{iant}) <0$, $\sigma^2<\frac{Var(Y_i)}{2}$\\\\
+Donc nous avons besoin de construire les paires $Y_i$ et $Y_{iant}$ de façon à ce que $Cov(Y_i,Y_{iant}) <0$ pour réduire la variance.\\\\
+\subsection{Implémentation}
+Comme nous simulons une matrice de bruits gaussiens indépendants, on peut implémenter la méthode des variables antithétiques en construisant une séquence $Y_i,Y_2,...,Y_N$ (rappel: $f(X^i)$ avec i $\in \mathbb{N})$ puis construire une autre séquence opposé à la première en prenant la négation de celle-ci: $-Y_1,-Y_2,...,-Y_N.$\\\\
+Pseudo-code:\\
+1. Créer une matrice vide de taille (nnoises,nsims) avec \\nnoises: nombre de bruits gaussiens indépendants \\ nsims: nombre de simulations\\
+2. Générer dans la moitié de la matrice des bruits gaussiens.\\
+3. Prendre l'opposé de la première moitié de la matrice, pour remplir la deuxième moitié de la matrice.\\\\
+Voici l'implémentation sous Python de la méthode des variables antithétiques:
+\begin{lstlisting}
+def antithetic_randn(nnoises, nsims):
+"""
+Renvoie un tableau de bruits gaussiens non corrélés :math:`(G_{_i,j})`
+de taille `(nnoises, nsims)`, et tel que, pour tout :math:`i` :
+:math:`\forall 1 \leq j \leq n / 2, G_{i,n/2+j} = -G_{i,j}`
+
+Paramètres :
+------------
+nnoises : entier positif
+Nombre de bruits à simuler.
+nsims : entier positif, pair
+Nombre de simulations à effectuer par prix.
+"""
+if nsims % 2 != 0:
+raise ValueError("the number of simulations used with antithetic "\
+"variables should be even.")
+half = int(0.5 * nsims)
+noises = np.empty((nnoises,nsims))
+noises[:, :half] = np.random.randn(nnoises, half)
+noises[:, half:] = -noises[:, :half]
+return noises
+
+\end{lstlisting}
+\newpage
+\section{Suites à discrépance faible (Quasi Monte Carlo)}
+Nous allons étudier les méthodes de Quasi Monte Carlo qui contrairement au Monte Carlo classique n'est pas basé sur la génération de nombres pseudo-aléatoires mais sur la génération de nombre déterministe aux propriétés spéciales générés par des suites à discrépance faible.//
+On peut voir le problème de l'évaluation du prix d'un produit dérivé vu dans le chapitre I (1)  comme une intégrale à la place d'une espérance:\\\\
+$e_p^{QMC}=$$\int_{[0,1]^s} f(u) \, \mathrm du$=$\frac{1}{N}\sum_{i=1}^{N}f(X^i)$\\\\
+On cherche à approximer l'intégrale.\\
+Pour cela, il faut générer les points $X^i$ dans l'hypercube $[0,1]^s$ avec s la dimension de l'espace.
+Ces points doivent être équiréparties.
+On ne se souciait pas vraiment de la dimension jusqu'à présent mais plus la dimension sera grande, plus il y aura des irrégularités dans les projections.\\
+Nous allons voir les différentes suites à discrépance faible permettant de générer ces points.
+
+
+Discrépance et propriétés d'équirépartition à détailler.(a faire)
+\subsection{Suite de Van Der Corput}
+
+La suite de Van der Corput en base b est de la forme:\\
+$\phi_b(n)=\frac{a_o}{b}+\frac{a_1}{b^2}+...+\frac{a_r}{b^{r+1}}$\\ avec n=$a_0+a_1+...+a_rb^r$, $a_r>0$, $0\leq a_i \leq p$, $0\leq i \leq r$
+\begin{center}
+	ou \\
+\end{center}
+$\phi_b: \mathbb{N} \rightarrow[0,1)$]\\
+$\forall$ $ b\in \mathbb{N}$, $\phi_b(n)=\sum_{i=0}^{\infty}\frac{a_i(n,b)}{b^{i-1}}$\\\\
+
+Nous allons voir les suites de Van Der Corput avec deux exemples ayant chacun leur approche. C'est important de bien comprendre cette suite car elle est la clé de la compréhension des suites qui vont suivre.\\\\
+
+\subsubsection{Exemple 1: l'approche classique}
+Nous allons prendre un exemple d'une suite de Van Der Corput en base 2 distribué sur l'intervalle [0,1).\\
+Pour n=12, les nombres générés sont: 0,$\frac{1}{2},\frac{1}{4},\frac{3}{4},\frac{1}{8},\frac{5}{8},\frac{3}{8},\frac{7}{8},\frac{1}{16},\frac{9}{16},\frac{5}{16},\frac{13}{16}$\\
+\bigbreak
+\begin{figure}[h]
+	\begin{center}
+	\includegraphics[scale=0.5]{figure1-van-der-corput.png}\\
+	\end{center}
+\caption{Suite de Van Der Corput en base 2 pour n=12}
+\end{figure}
+Les nombres générés séquentiellement remplissent les larges espaces entre les nombres précédents de la séquence.\\
+\\En prenant la logique de la construction d'une suite de Van Der Corput, nous avons implémenté sous Python les fonctions permmettant de générer la séquence:\\
+\begin{lstlisting}
+def vdc(n, base):
+"""
+Cette fonction permet de calculer le n-ieme nombre de la base b de la 
+séquence de Van Der Corput
+"""
+vdc, denom = 0,1
+while n:
+denom *= base
+n, remainder = divmod(n, base)
+vdc += remainder / denom
+return vdc
+\end{lstlisting}
+\bigbreak
+
+\begin{lstlisting}
+def van_der_corput(nsims,b):
+"""
+Cette fonction permet de générer la séquence de Van Der Corput en base b
+"""
+array=np.empty(nsims)
+i=0
+for i in range(nsims):
+array[i]=vdc(i,b)
+return array
+\end{lstlisting}
+On a testé ces fonctions et on a tracé ceci:\\
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.5]{figure_1-van_der_corput_exemple1.png}\\
+	\end{center}
+	\caption{Suite de Van Der Corput en base 2 pour n=30}
+\end{figure}
+\medbreak
+On voit bien sur la figure 2.2 que le points générés par la séquence de Van Der Corput sont plutôt bien équiréparties.
+\subsubsection{Exemple 2:l'approche binaire}
+On peut calculer le n-ième terme de la suite de Van Der Corput de base b comme ceci: ( à expliquer plus en détails)
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.5]{figure2.3-van_der_corput_binaire.png}\\
+	\end{center}
+	\caption{Suite de Van Der Corput en base 2 pour n=30}
+\end{figure}
+\subsubsection{Implémentation de la suite de Van Der Corput}
+Voici l'implémentation sous Python.\\
+remarque: comme la suite de Van Der Corput génère des points dans l'intervalle [0,1), il a fallu modifier la fonction vdc (sans cette modification, on n'obtenait pas des résultats ce rapprochant du Monte Carlo classique) en prenant l'inverse de la CDF(cumulative distribution function), à vérifier
+\begin{lstlisting}
+	def vdc(n, base):
+	"""
+	Cette fonction permet de calculer le n-ieme nombre de la base b de la 
+	séquence de Van Der Corput
+	"""
+	vdc, denom = 0,1
+	while n:
+	denom *= base
+	n, remainder = divmod(n, base)
+	vdc += remainder / denom
+	return norm.ppf(vdc)
+	
+	def van_der_corput(nsims,b):
+	"""
+	Cette fonction permet de générer la séquence de Van Der Corput en base b
+	"""
+	array=np.empty(nsims)
+	i=0
+	for i in range(nsims):
+	array[i]=vdc(i,b)
+	return array
+	
+	def van_der_corput_dimension(dim,nsims):
+	array=np.empty((dim,nsims))
+	"""
+	Cette fonction génère dans un tableau de taille (dim,nsims) toutes les séquences
+	de la suite de Van der Corput de la base 2 à la base dim+2
+	"""
+	for i in range(2,dim+2,1):
+	array[i-2,:]=van_der_corput(nsims, i)
+	return array
+	
+\end{lstlisting}
+
+\subsection{Suite de Sobol}
+Explication de la suite de Sobol à faire
+\begin{lstlisting}
+import sobol_seq
+
+def sobol(nnoises,nsims):
+"""
+Renvoie un tableau de valeurs générés par la suite de Sobol
+de taille (nnoises,nsims)
+"""
+noises = np.empty((nsims))
+"""
+Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
+pour générer des variables quasi-aléatoires suivant une loi normale
+"""
+noises=sobol_seq.i4_sobol_generate_std_normal(nnoises,nsims)
+return (noises.reshape(nnoises,nsims))
+
+\end{lstlisting}
 \end{document}

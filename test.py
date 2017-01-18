@@ -61,3 +61,19 @@ print("Quasi Monte Carlo Sobol-Delta")
 for k, v in delta.items():
     print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
 
+# Quasi Monte Carlo avec suite de Van Der Corput
+gen = mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"],
+                                      mc.generators.van_der_corput_dimension)
+market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
+itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
+atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
+otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
+cf, volumes, prices = mc.runmc(otm, atm, itm)
+mtm = mc.getmtm(cf)
+print("\nQuasi Monte Carlo Van Der Corput :")
+for k, v in mtm.items():
+    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+delta = mc.getdelta(volumes, prices)
+print("Quasi Monte Carlo Van Der Corput-Delta")
+for k, v in delta.items():
+    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))

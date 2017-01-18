@@ -1,6 +1,7 @@
 import numpy as np
 from efficientmc.utils import timecached, DateCache
 import sobol_seq
+from scipy.stats import norm
 
 class GaussianGenerator:
     "Générateur de bruits gaussiens corrélés."
@@ -86,6 +87,37 @@ def antithetic_randn(nnoises, nsims):
     noises[:, :half] = np.random.randn(nnoises, half)
     noises[:, half:] = -noises[:, :half]
     return noises
+
+def vdc(n, base):
+    """
+    Cette fonction permet de calculer le n-ieme nombre de la base b de la 
+    séquence de Van Der Corput
+    """
+    vdc, denom = 0,1
+    while n:
+        denom *= base
+        n, remainder = divmod(n, base)
+        vdc += remainder / denom
+    return norm.ppf(vdc)
+def van_der_corput(nsims,b):
+    """
+    Cette fonction permet de générer la séquence de Van Der Corput en base b
+    """
+    array=np.empty(nsims)
+    i=0
+    for i in range(nsims):
+        array[i]=vdc(i,b)
+    return array
+
+def van_der_corput_dimension(dim,nsims):
+    array=np.empty((dim,nsims))
+    """
+    Cette fonction génère dans un tableau de taille (dim,nsims) toutes les séquences
+    de la suite de Van der Corput de la base 2 à la base dim+2
+    """
+    for i in range(2,dim+2,1):
+        array[i-2,:]=van_der_corput(nsims, i)
+    return array
 
 def sobol(nnoises,nsims):
     """

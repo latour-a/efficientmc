@@ -1,6 +1,7 @@
 import numpy as np
 from efficientmc.utils import timecached, DateCache
 import sobol_seq
+import ghalton as gh
 from scipy.stats import norm
 
 class GaussianGenerator:
@@ -118,6 +119,24 @@ def van_der_corput_dimension(dim,nsims):
     for i in range(2,dim+2,1):
         array[i-2,:]=van_der_corput(nsims, i)
     return array
+
+def halton(dim,nsims):
+    """
+    Attention: la fonction crash pour nsims>500, on doit revoir l'optimisation de la fonction
+    
+    On utilise la librairie Python existante sur la suite de Halton
+    
+    GeneralizedHalton produit une suite de nsims dimension (colonnes),
+    le nombre 68 est utilisé pour faire des permutations, c'est le nombre qui permet de se rapprocher
+    le plus des valeurs du Monte Carlo classique
+    """
+    sequence = gh.GeneralizedHalton(nsims,68)
+    "Une liste de dim sous-listes est produite"
+    points=sequence.get(dim)
+    "Pour lire la liste dans une matrice à plusieurs dimensions (dim,nsims)"
+    data=np.array(norm.ppf(points))
+    shape=(dim,nsims)
+    return data.reshape(shape)
 
 def sobol(nnoises,nsims):
     """

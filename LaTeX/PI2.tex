@@ -258,71 +258,167 @@ On peut construire un estimateur non biaisé tel que celui-ci :
 	\bar{v_N} = \sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(f(X^i)-\bar{e_N})^2}
 \end{equation}
 
-Voici l’implémentation sous Python de tout ce que nous avons énoncé dans cette partie I, on a pris  $\alpha$ =0.95 pour la contruction des intervalles de confiance.
+Voici l’implémentation sous Python de tout ce que nous avons énoncé dans cette partie I, dans le fichier $\_init\_.py$, on a pris  $\alpha$ =0.95 pour la contruction des intervalles de confiance.
+
 \begin{lstlisting}
-class GaussianGenerator:
-"Générateur de bruits gaussiens corrélés."
+"Pricing d'actifs énergétiques par Monte Carlo."
 
-def __init__(self, nsims, corrmatrix, corrkeys, randomfunc):
-"""
-Initialise une nouvelle instance de la classe `GaussianGenerator`.
+import numpy as np
+import pandas as pd
+import scipy.stats as sps
+import efficientmc.assets as assets
+import efficientmc.pricemodels as pricemodels
+import efficientmc.generators as generators
+from collections import namedtuple
 
-Paramètres :
-------------
-nsims : entier positif
-Nombre de simulations à générer.
-corrmatrix : matrice carrée
-Matrice de corrélation entre les différents bruits gaussiens
-à simuler. La matrice doit être définie positive.
-corrkeys
-Liste des identifiants associés aux différentes lignes / colonnes
-de la matrice de corrélation `corrmatrix`. Les identifiants doivent
-être donnés dans l'ordre dans lequel les bruits correspondants
-apparaissent dans `corrmatrix`.
-randomfunc
-Fonction permettant de générer des bruits gaussiens indépendants
-(typiquement `np.random.randn`).
-"""
-self.corrmatrix = corrmatrix
-self.corrkeys = corrkeys
-self.nsims = nsims
-self.randomfunc = randomfunc
-self.cache = DateCache()
-try:
-np.linalg.cholesky(self.corrmatrix)
-except np.linalg.LinAlgError:
-raise np.linalg.LinAlgError("the correlation matrix is not "\
-"positive definite.") from None
+MCResults = namedtuple('MCResults', ('mean', 'iclow', 'icup'))
 
-@property
-def nnoises(self):
-"Nombre de bruits gaussiens distincts à simuler."
-return self.corrmatrix.shape[0]
+def runmc(*allassets):
+"""
+Calcule par simulation Monte-Carlo les cash-flows des actifs de
+`allassets`, sous la probabilité risque-neutre.
+"""
+allmarkets = set([m for asset in allassets for m in asset.getmarkets()])
+marketsdates = set([d for market in allmarkets for d in market.getdates()])
+assetsdates = set([d for asset in allassets for d in asset.getdates()])
+earnings = {asset.name: {} for asset in allassets}
+prices = {market.name: {} for market in allmarkets}
+volumes = {asset.name: {m.name: {} for m in asset.getmarkets()} \
+for asset in allassets}
+alldates = assetsdates.union(marketsdates)
+for date in alldates:
+#FIXME: utiliser une notion de `computation` pour sauvegarder et
+# aggréger les résultats au fur et à mesure.
+# Mise à jour des marchés :
+for market in allmarkets:
+market.simulate(date)
+# Mise à jour des objets :
+for asset in allassets:
+earnings[asset.name][date] = asset.get_discounted_cf(date)
+for market in asset.getmarkets():
+volumes[asset.name][market.name][date] = asset.getvolume(date,
+market)
+#FIXME: on peut avoir besoin d'autre chose que du spot.
+if date not in prices[market.name]:
+prices[market.name][date] = market.getspot(date)
+earnings = pd.Panel(earnings).transpose(1, 0, 2)
+#FIXME: utiliser xarray.
+volumes = {key: pd.Panel(value).transpose(1, 0, 2)
+for key, value in volumes.items()}
+prices = pd.Panel(prices).transpose(1, 0, 2)
+return earnings, volumes, prices
 
-@timecached
-def getallnoises(self, date):
+def getmtm(cf, alpha=0.95):
 """
-Renvoie `self.nsims` réalisations de `self.nnoises` bruits
-gaussiens corrélés.
-"""
-whitenoises = self.randomfunc(self.nnoises, self.nsims)
-noises = np.dot(np.linalg.cholesky(self.corrmatrix), whitenoises)
-return noises
+Calcule la MtM (i.e. : les cash-flows moyens réalisés et un intervalle
+de confiance) de chaque actif listé dans `cf`.
 
-@timecached
-def getnoises(self, date, keys):
+Paramètres
+----------
+cf : pandas.Panel
+Cash-flows réalisés pour chaque simulation (`items`), chaque
+actif (`major_axis`) et chaque date (`minor_axis`).
+alpha : double compris entre 0. et 1.
+Quantile à utiliser pour le calcul des intervalles de confiances.
 """
-Renvoie un tableau de taille `(len(keys), self.nsims)` de bruits
-gaussiens corrélés correspondants aux aléas identifiés par les
-clefs `keys`.
-"""
-noises = self.getallnoises(date)
-res = np.empty((len(keys), self.nsims))
-for idx, key in enumerate(keys):
-keyidx = self.corrkeys.index(key)
-res[idx, :] = noises[keyidx, :]
+nsims = cf.shape[0]
+cumvalues = cf.sum(axis=2)
+mean = cumvalues.mean(axis=1)
+std = cumvalues.std(axis=1)
+res = {}
+for key, val in mean.items():
+res[key] = mkmcresults(val, std[key], nsims)
 return res
 
+\end{lstlisting}
+
+Il reste aussi le problème de la queue de distribution de
+la veritable loi de $\bar{e_N}$  (on a supposé précedemment qu'elle suivait une loi normale grâce au TCL) qui n’est pas négligeable, nous verrons cela plus en détails à travers les résultats obtenus de notre pricer.\\\\
+Il y a par exemple, le prix de l’électricité en forward
+qui varie extrêmement et ne fluctue plus comme une loi
+gaussienne. La distribution de ses fluctuations
+appartient au régime des distributions dites « à queue
+épaisse ».\\\\
+Nous verrons cela dans le chapitre 3 et 4 de ce rapport.
+\newpage
+\section{Générateur aléatoire}
+On a besoin de simuler des variables aléatoires. Or un
+ordinateur ne génère que de suites déterministes.
+bruit gaussien: realisation de processus aléatoire suivant une loi normale)
+Sous Python, nous allons stocké des bruits gaussiens dans un tableau (matrice).
+Voici la classe GaussianGenerator dans le fichier generators.py correspondant :
+
+\begin{lstlisting}
+	import numpy as np
+	from efficientmc.utils import timecached, DateCache
+	import sobol_seq
+	import ghalton as gh
+	from scipy.stats import norm
+	from math import ceil, fmod, floor, log
+	
+	class GaussianGenerator:
+	"Générateur de bruits gaussiens corrélés."
+	
+	def __init__(self, nsims, corrmatrix, corrkeys, randomfunc):
+	"""
+	Initialise une nouvelle instance de la classe `GaussianGenerator`.
+	
+	Paramètres :
+	------------
+	nsims : entier positif
+	Nombre de simulations à générer.
+	corrmatrix : matrice carrée
+	Matrice de corrélation entre les différents bruits gaussiens
+	à simuler. La matrice doit être définie positive.
+	corrkeys
+	Liste des identifiants associés aux différentes lignes / colonnes
+	de la matrice de corrélation `corrmatrix`. Les identifiants doivent
+	être donnés dans l'ordre dans lequel les bruits correspondants
+	apparaissent dans `corrmatrix`.
+	randomfunc
+	Fonction permettant de générer des bruits gaussiens indépendants
+	(typiquement `np.random.randn`).
+	"""
+	self.corrmatrix = corrmatrix
+	self.corrkeys = corrkeys
+	self.nsims = nsims
+	self.randomfunc = randomfunc
+	self.cache = DateCache()
+	try:
+	np.linalg.cholesky(self.corrmatrix)
+	except np.linalg.LinAlgError:
+	raise np.linalg.LinAlgError("the correlation matrix is not "\
+	"positive definite.") from None
+	
+	@property
+	def nnoises(self):
+	"Nombre de bruits gaussiens distincts à simuler."
+	return self.corrmatrix.shape[0]
+	
+	@timecached
+	def getallnoises(self, date):
+	"""
+	Renvoie `self.nsims` réalisations de `self.nnoises` bruits
+	gaussiens corrélés.
+	"""
+	whitenoises = self.randomfunc(self.nnoises, self.nsims)
+	noises = np.dot(np.linalg.cholesky(self.corrmatrix), whitenoises)
+	return noises
+	
+	@timecached
+	def getnoises(self, date, keys):
+	"""
+	Renvoie un tableau de taille `(len(keys), self.nsims)` de bruits
+	gaussiens corrélés correspondants aux aléas identifiés par les
+	clefs `keys`.
+	"""
+	noises = self.getallnoises(date)
+	res = np.empty((len(keys), self.nsims))
+	for idx, key in enumerate(keys):
+	keyidx = self.corrkeys.index(key)
+	res[idx, :] = noises[keyidx, :]
+	return res
+	
 \end{lstlisting}
 
 \chapter{Méthodes de réduction de la variance}

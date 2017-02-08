@@ -92,7 +92,7 @@ def antithetic_randn(nnoises, nsims):
 
 def vdc(n, base):
     """
-    Cette fonction permet de calculer le n-ieme nombre de la base b de la 
+    Cette fonction permet de calculer le n-ieme nombre de la base b de la
     séquence de Van Der Corput
     """
     vdc, denom = 0,1
@@ -101,14 +101,14 @@ def vdc(n, base):
         n, remainder = divmod(n, base)
         vdc += remainder / denom
     return norm.ppf(vdc)
+
 def van_der_corput(nsims,b):
     """
     Cette fonction permet de générer la séquence de Van Der Corput en base b
     """
     array=np.empty(nsims)
-    i=0
     for i in range(nsims):
-        array[i]=vdc(i,b)
+        array[i]=vdc(i+1,b)
     return array
 
 def van_der_corput_dimension(dim,nsims):
@@ -124,9 +124,9 @@ def van_der_corput_dimension(dim,nsims):
 def halton(dim,nsims):
     """
     Attention: la fonction crash pour nsims>500, on doit revoir l'optimisation de la fonction
-    
+
     On utilise la librairie Python existante sur la suite de Halton
-    
+
     GeneralizedHalton produit une suite de nsims dimension (colonnes),
     le nombre 68 est utilisé pour faire des permutations, c'est le nombre qui permet de se rapprocher
     le plus des valeurs du Monte Carlo classique
@@ -152,7 +152,7 @@ def sobol(nnoises,nsims):
 
 def halton2(dim, nsims):
     """
-    la fonction ne crash plus.    
+    la fonction ne crash plus.
     Version 2 de la suite d'halton sans la librairie Python existante.
     """
     h = np.empty(nsims * dim)

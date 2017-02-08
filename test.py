@@ -1,113 +1,51 @@
 import numpy as np
 import efficientmc as mc
+from functools import partial
 
-# Graine fixée afin d'avoir des résultats reproductibles.
-np.random.seed(0)
+def runtests(allgenerators, partialmarket, partialassets):
+    """
+    Calcule la MtM et le delta de tous les actifs de `partialassets` en
+    leur associant le marché `partialmarket` et en utilisant successivement
+    les générateurs Monte Carlo de `allgenerators`.
 
-# Monte Carlo de base :
-gen = mc.generators.GaussianGenerator(500000, np.array([[1.]]),
-                                      ["BlackScholes"], np.random.randn)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("Classique - MtM")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Classique - Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+    Paramètres :
+    ------------
+    allgenerators
+        Liste de générateurs Monte Carlo.
+    partialmarket
+        Constructeur permettant d'instancier un marché dont tous les
+        paramètres ont été fixés hormis le générateur Monte Carlo.
+    allassets
+        Liste de constructeurs permettant d'instancier des actifs dont
+        tous les paramètres ont été fixés hormis le marché.
+    """
+    for key, gen in allgenerators.items():
+        market = partialmarket(gen)
+        allassets = [asset(market=market) for asset in partialassets]
+        cf, volumes, prices = mc.runmc(*allassets)
+        mtm = mc.getmtm(cf)
+        print("%s - MtM" % key)
+        for k, v in mtm.items():
+            print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+        delta = mc.getdelta(volumes, prices)
+        print("%s - Delta" % key)
+        for k, v in delta.items():
+            print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+        print("")
 
-# Monte Carlo antithétique :
-gen = mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"],
-                                      mc.generators.antithetic_randn)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("\nAntithétique - Mtm:")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Antithétique - Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+if __name__ == '__main__':
+    # Graine fixée afin d'avoir des résultats reproductibles.
+    np.random.seed(0)
 
-# Quasi Monte Carlo avec suite de Sobol
-"""
-On réduit le nombre de simulations nsims car les nombres générés ont des
-propriétés spéciales (équirépartition), cela accélère la convergence du calcul
-et donc le temps de calcul
-On obtient des valeurs similaires au Monte Carlo classique avec moins de simulations
-"""
-gen = mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"],
-                                      mc.generators.sobol)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("\nQuasi Monte Carlo Sobol :")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Quasi Monte Carlo Sobol-Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-
-# Quasi Monte Carlo avec suite de Van Der Corput
-gen = mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"],
-                                      mc.generators.van_der_corput_dimension)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("\nQuasi Monte Carlo Van Der Corput :")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Quasi Monte Carlo Van Der Corput-Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-    
-# Quasi Monte Carlo avec suite de Halton:
-gen = mc.generators.GaussianGenerator(500, np.array([[1.]]), ["BlackScholes"],
-                                      mc.generators.halton)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("\nQuasi Monte Carlo Halton - Mtm:")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Quasi Monte Carlo Halton - Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-
-# Quasi Monte Carlo avec suite de Halton version 2:
-gen = mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"],
-                                      mc.generators.halton2)
-market = mc.pricemodels.BlackScholesModel("BlackScholes", 100., 0., 0.2, gen)
-itm = mc.assets.EuropeanCall("itm", market, strike=90., maturity=1.)
-atm = mc.assets.EuropeanCall("atm", market, strike=100., maturity=1.)
-otm = mc.assets.EuropeanCall("otm", market, strike=110., maturity=1.)
-cf, volumes, prices = mc.runmc(otm, atm, itm)
-mtm = mc.getmtm(cf)
-print("\nQuasi Monte Carlo Halton 2 - Mtm:")
-for k, v in mtm.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
-delta = mc.getdelta(volumes, prices)
-print("Quasi Monte Carlo Halton 2- Delta")
-for k, v in delta.items():
-    print("%s: %.5f [%.5f, %.5f]" % (k, v.mean, v.iclow, v.icup))
+    # Calls européens, modèle de Black-Scholes :
+    ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], np.random.randn),
+                     "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], mc.generators.antithetic_randn),
+                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobol),
+                     "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.van_der_corput_dimension),
+                     "Halton": mc.generators.GaussianGenerator(500, np.array([[1.]]), ["BlackScholes"], mc.generators.halton),
+                     "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.halton2)}
+    PARTIALMARKET = partial(mc.pricemodels.BlackScholesModel, "BlackScholes", 100., 0., 0.2)
+    PARTIALASSETS = [partial(mc.assets.EuropeanCall, name="itm", strike=90., maturity=1.),
+                     partial(mc.assets.EuropeanCall, name="atm", strike=100., maturity=1.),
+                     partial(mc.assets.EuropeanCall, name="otm", strike=110., maturity=1.),]
+    runtests(ALLGENERATORS, PARTIALMARKET, PARTIALASSETS)

@@ -187,6 +187,23 @@ def haltonF(nnoises,nsims):
             halton[j,i]=vdc(i,prime)
     return halton
 
+"Suite de Hammersley"
+
+def hammersley(nnoises,nsims):
+    Prime=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,\
+            59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,\
+             127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,\
+              191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251,\
+               257, 263, 269, 271, 277, 281]
+    hammersley=np.empty((nnoises,nsims))
+    for i in range(0,nsims,1):
+        hammersley[0,i]=i/nsims
+    for i in range(0,nsims,1):
+        for j in range(1,nnoises-1,1):
+            prime=Prime[j]
+            hammersley[j,i]=vdc(i,prime)
+    return hammersley
+
 def sobol(nnoises,nsims):
     """
     Renvoie un tableau de valeurs générés par la suite de Sobol

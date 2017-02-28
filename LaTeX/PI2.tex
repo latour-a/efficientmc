@@ -684,5 +684,30 @@ Après la dimension d=14, la suite de Halton laisse des grands espaces.
 \subsubsection{Discrépance}
 $D_N^*(x_1,x_2,...,x_N)=\mathcal{O}(\frac{(logN)^d}{N}) $\\
 d la dimension de la suite de halton tel que: $p_1,p_2,...,p_d$ d premiers nombres premiers et N=nsims nombre de simulations.
+\newpage
+
+\subsection{Suite de Hammersley}
+La suite de Hammersely est une simple modification de la suite de Halton. Elle est de la forme:\\
+$x_i=(i/n,\phi_{p1}(i),\phi_{p2}(i),...,\phi_{d-1}(i))$\\\\
+
+
+\subsubsection{Discrépance}
+L'avantage par rapport à la suite de Halton est que la discrépance est meilleure pour Hammersley.
+$D_N^*(x_1,x_2,...,x_N)=\mathcal{O}(\frac{(logN)^d-1}{N} $\\
+d la dimension de la suite de halton tel que: $p_1,p_2,...,p_{d-1}$ d-1 premiers nombres premiers et N=nsims nombre de simulations.\\\\
+
+\subsubsection{Remarque}
+La suite de Hammersley ne sera utile que en moyenne dimensions et ne sera donc pas intrès intéressante pour nous à cause de la séquence de la 1ère dimension.\\
+Nous l'avons quand même implémenté vu la simple modification de la suite de Halton pour avoir une comparaison entre plusieurs suites à discrépances faibles.
+
+Voici la comparaison entre une génération aléatoire simple, la suite de Halton et la suite de Hammersley:\\\\
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.4]{figure_2-halton-random-sample.png}
+	\includegraphics[scale=0.4]{figure_2-halton-halton.png}
+	\includegraphics[scale=0.4]{figure_3-hammersley.png}
+	\caption{Comparaisons Monte Carlo classique-Suite de Halton-Suite de Hammersley}	
+\end{figure}
+
 
 \end{document}

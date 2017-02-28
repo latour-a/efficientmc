@@ -41,13 +41,14 @@ if __name__ == '__main__':
     # Calls européens, modèle de Black-Scholes :
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], mc.generators.antithetic_randn),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobol),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.van_der_corput_dimension),
                      "Halton": mc.generators.GaussianGenerator(500, np.array([[1.]]), ["BlackScholes"], mc.generators.halton),
                      "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.halton2),
                      "Halton F": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.haltonF),
                      "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.hammersley),
-                     "Faure": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.faureF)}
+                     "Faure": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.faureF),
+                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobol),
+                     "SobolF": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobolF)}
     PARTIALMARKETS = {"market": partial(mc.pricemodels.BlackScholesModel, "BlackScholes", 100., 0., 0.2)}
     PARTIALASSETS = [partial(mc.assets.EuropeanCall, name="itm", strike=90., maturity=1.),
                      partial(mc.assets.EuropeanCall, name="atm", strike=100., maturity=1.),
@@ -57,12 +58,13 @@ if __name__ == '__main__':
     # Spreads européens, modèle de Black-Scholes :
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.antithetic_randn),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.sobol),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.van_der_corput_dimension),
                      "Halton": mc.generators.GaussianGenerator(500, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.halton),
                      "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.halton2),
                      "Halton F": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.haltonF),
-                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.hammersley)}
+                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.hammersley),
+                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.sobol),
+                     "SoboF": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.sobolF)}
     PARTIALMARKETS = {"market1": partial(mc.pricemodels.BlackScholesModel, "BlackScholes1", 100., 0., 0.2),
                       "market2": partial(mc.pricemodels.BlackScholesModel, "BlackScholes2", 100., 0., 0.2)}
     PARTIALASSETS = [partial(mc.assets.EuropeanSpread, name="spread", maturity=1.)]
@@ -71,12 +73,13 @@ if __name__ == '__main__':
     # Basket option, modèle de Black-Scholes :
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.antithetic_randn),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.sobol),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.van_der_corput_dimension),
                      "Halton": mc.generators.GaussianGenerator(500, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.halton),
                      "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.halton2),
                      "Halton F": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.haltonF),
-                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.hammersley)}
+                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.hammersley),
+                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.sobol),
+                     "SobolF": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.sobolF)}
     PARTIALMARKETS = {"markets": partial(mc.pricemodels.MultiAssetsBlackScholesModel, "MultiAssetsBlackScholes", 2, np.array([200., 190.]), 0., np.array([0.2, 0.2])) }
     PARTIALASSETS = [partial(mc.assets.BasketOption, name="basket", typeO="call",numbersU=2, numbersA=np.array([2., 2.]), maturity=1.,strike=110.)]
     runtests(ALLGENERATORS, PARTIALMARKETS, PARTIALASSETS)

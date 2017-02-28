@@ -814,6 +814,28 @@ return norm.ppf(array)
 \end{lstlisting}
 
 A refaire si il reste du temps.
+\newpage
+
+\subsection{Suite de Sobol}
+    La suite de Sobol d-dimensions comme la suite de Faure a la même base pour toutes ces d-dimensions, utilisant la base 2 et elle permute les élements dans chaque dimension grâce à une série de "nombres dirigés" $V_i$.\\\\
+$V_i=\frac{m_i}{2^i}$ où les $ m_i$ sont des entiers paires positifs inférieures à $2^i$.\\\\
+La suite de Sobol d-dimension est de la forme suivante:\\\\
+$x_n=(a_1(n)V_1\textcircled{+},...,\textcircled{+}a_r(n))$
+
+\subsubsection{Implémentation}
+\begin{lstlisting}
+	def sobolF(nnoises,nsims):
+	"""
+	Renvoie un tableau de valeurs générés par la suite de Sobol
+	de taille (nnoises,nsims)
+	"""
+	noises = np.empty((nnoises,nsims))
+	#  Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
+	# pour générer des variables quasi-aléatoires suivant une loi normale.
+	noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
+	noises=np.transpose(noises)
+	return noises
+\end{lstlisting}
 
 
 \end{document}

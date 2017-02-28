@@ -264,6 +264,7 @@ def faureF(dim,nsims):
                 array[s,j]=np.sum(toDigits3(j,p,s+1))
         return norm.ppf(array)
  
+"Suite de Sobol"
 
 def sobol(nnoises,nsims):
     """
@@ -275,3 +276,15 @@ def sobol(nnoises,nsims):
     # pour générer des variables quasi-aléatoires suivant une loi normale.
     noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
     return noises.reshape(nnoises, nsims)
+
+def sobolF(nnoises,nsims):
+    """
+    Renvoie un tableau de valeurs générés par la suite de Sobol
+    de taille (nnoises,nsims)
+    """
+    noises = np.empty((nnoises,nsims))
+    #  Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
+    # pour générer des variables quasi-aléatoires suivant une loi normale.
+    noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
+    noises=np.transpose(noises)
+    return noises

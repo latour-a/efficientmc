@@ -67,6 +67,8 @@ class GaussianGenerator:
             keyidx = self.corrkeys.index(key)
             res[idx, :] = noises[keyidx, :]
         return res
+    
+"Variables antithétiques"
 
 def antithetic_randn(nnoises, nsims):
     """
@@ -89,6 +91,10 @@ def antithetic_randn(nnoises, nsims):
     noises[:, :half] = np.random.randn(nnoises, half)
     noises[:, half:] = -noises[:, :half]
     return noises
+
+"Quasi-Monte Carlo"
+
+"Suite de Van der Corput"
 
 def vdc(n, base):
     """

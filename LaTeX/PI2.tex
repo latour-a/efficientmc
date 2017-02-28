@@ -493,13 +493,14 @@ Nous allons voir les différentes suites à discrépance faible permettant de g�
 Discrépance et propriétés d'équirépartition à détailler.(a faire)
 \subsection{Suite de Van Der Corput}
 
+La suite de Van der Corput génère une suite de points dans l'intervalle [0,1] qui ne se répète jamais.\\
 La suite de Van der Corput en base b est de la forme:\\
 $\phi_b(n)=\frac{a_o}{b}+\frac{a_1}{b^2}+...+\frac{a_r}{b^{r+1}}$\\ avec n=$a_0+a_1+...+a_rb^r$, $a_r>0$, $0\leq a_i \leq p$, $0\leq i \leq r$
 \begin{center}
 	ou \\
 \end{center}
 $\phi_b: \mathbb{N} \rightarrow[0,1)$]\\
-$\forall$ $ b\in \mathbb{N}$, $\phi_b(n)=\sum_{i=0}^{\infty}\frac{a_i(n,b)}{b^{i-1}}$\\\\
+$\forall$ $ b\in \mathbb{N}$, $\phi_b(n)=\sum_{i=0}^{I}\frac{a_i(n,b)}{b^{i-1}}$\\\\
 
 Nous allons voir les suites de Van Der Corput avec deux exemples ayant chacun leur approche. C'est important de bien comprendre cette suite car elle est la clé de la compréhension des suites qui vont suivre.\\\\
 
@@ -551,16 +552,21 @@ On a testé ces fonctions et on a tracé ceci:\\
 \medbreak
 On voit bien sur la figure 2.2 que le points générés par la séquence de Van Der Corput sont plutôt bien équiréparties.
 \subsubsection{Exemple 2:l'approche binaire}
-On peut calculer le n-ième terme de la suite de Van Der Corput de base b comme ceci: ( à expliquer plus en détails)
+On peut calculer le n-ième terme de la suite de Van Der Corput de base b comme ceci:
 \begin{figure}[h]
 	\begin{center}
 		\includegraphics[scale=0.5]{figure2.3-van_der_corput_binaire.png}\\
 	\end{center}
 	\caption{Suite de Van Der Corput en base 2 pour n=30}
 \end{figure}
+$\phi_b(n)=\sum_{i=0}^{I}\frac{a_i(n)}{b^{i-1}}$\\\\
+Les $a_i(n)$ sont la réflexion de n en une base b.\\
+I=int(ln(n)/ln(b).\\
+ex:\\
+n=19 et b=3, $19=2\times3^2+0\times3^1+1\times3^0$\\
+$\phi_3(19)=\frac{1}{3}+\frac{0}{9}+\frac{2}{27}=\frac{11}{27}$
 \subsubsection{Implémentation de la suite de Van Der Corput}
 Voici l'implémentation sous Python.\\
-remarque: comme la suite de Van Der Corput génère des points dans l'intervalle [0,1), il a fallu modifier la fonction vdc (sans cette modification, on n'obtenait pas des résultats ce rapprochant du Monte Carlo classique) en prenant l'inverse de la CDF(cumulative distribution function), à vérifier
 \begin{lstlisting}
 	def vdc(n, base):
 	"""
@@ -595,6 +601,10 @@ remarque: comme la suite de Van Der Corput génère des points dans l'intervalle
 	return array
 	
 \end{lstlisting}
+\subsubsection{Discrépance}
+$D_N^*(\phi_b(1),\phi_b(2),...,\phi_b(N))= \mathcal{O}(\frac{logN}{N})$ \\
+avec N=nsims nombres de simulations.
+\newpage
 
 \subsection{Suite de Sobol}
 Explication de la suite de Sobol à faire

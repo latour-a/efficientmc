@@ -613,6 +613,8 @@ Elle est composée de d 1-dimension suites de Van der Corput en utilisant comme 
 Un point généré par la suite de Halton est de la forme:\\
 $x_i=(\phi_{p_1}(i),\phi_{p_2}(i),...,\phi{p_d}(i))$\\
 avec d la dimension de la suite de Halton et $p_1,p_2,...,p_d$ les premiers nombres premiers.\\
+
+\subsubsection{Implémentation de la suite de Halton}
 En prenant la logique de la construction de la suite de Halton, nous l'avons implémenté de 2 façons, dont voici la première :\\
 \begin{lstlisting}
 def haltonF(nnoises,nsims):
@@ -688,26 +690,130 @@ d la dimension de la suite de halton tel que: $p_1,p_2,...,p_d$ d premiers nombr
 
 \subsection{Suite de Hammersley}
 La suite de Hammersely est une simple modification de la suite de Halton. Elle est de la forme:\\
-$x_i=(i/n,\phi_{p1}(i),\phi_{p2}(i),...,\phi_{d-1}(i))$\\\\
+$x_i=(i/n,\phi_{p1}(i),\phi_{p2}(i),...,\phi_{d-1}(i))$
 
 
 \subsubsection{Discrépance}
 L'avantage par rapport à la suite de Halton est que la discrépance est meilleure pour Hammersley.
 $D_N^*(x_1,x_2,...,x_N)=\mathcal{O}(\frac{(logN)^d-1}{N} $\\
-d la dimension de la suite de halton tel que: $p_1,p_2,...,p_{d-1}$ d-1 premiers nombres premiers et N=nsims nombre de simulations.\\\\
+d la dimension de la suite de halton tel que: $p_1,p_2,...,p_{d-1}$ d-1 premiers nombres premiers et N=nsims nombre de simulations.
 
+\subsubsection{Implémentation de la suite de Hammersley}
+\begin{lstlisting}
+	def hammersley(nnoises,nsims):
+	Prime=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,\
+	59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,\
+	127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,\
+	191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251,\
+	257, 263, 269, 271, 277, 281]
+	hammersley=np.empty((nnoises,nsims))
+	for i in range(0,nsims,1):
+	hammersley[0,i]=i/nsims
+	for i in range(0,nsims,1):
+	for j in range(1,nnoises-1,1):
+	prime=Prime[j]
+	hammersley[j,i]=vdc(i,prime)
+	return hammersley
+\end{lstlisting}
+\newpage
 \subsubsection{Remarque}
 La suite de Hammersley ne sera utile que en moyenne dimensions et ne sera donc pas intrès intéressante pour nous à cause de la séquence de la 1ère dimension.\\
 Nous l'avons quand même implémenté vu la simple modification de la suite de Halton pour avoir une comparaison entre plusieurs suites à discrépances faibles.
 
 Voici la comparaison entre une génération aléatoire simple, la suite de Halton et la suite de Hammersley:\\\\
-\begin{figure}[!h]
+
+\begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.4]{figure_2-halton-random-sample.png}
 	\includegraphics[scale=0.4]{figure_2-halton-halton.png}
 	\includegraphics[scale=0.4]{figure_3-hammersley.png}
 	\caption{Comparaisons Monte Carlo classique-Suite de Halton-Suite de Hammersley}	
 \end{figure}
+
+\clearpage
+\subsection{Suite de faure}
+  La suite de Faure  d-dimension utilise le plus petit nombre premier tel que p$\geq d$ avec p nombre premier.\\
+La suite de Faure à d-dimensions est donné par la formule suivante:\\
+$x_n=(\phi_r(n),T(\phi_r(n),...,T^{d-1}(\phi_r(n)))$\\
+avec $\phi_r$ la suite de Van der Corput en base r et T la transformation dépendant des coefficients binomiaux et la décomposition de n en base r.\\
+Pour la suite de Van der Corput:\\
+$\phi_r^1(n)=\sum{i=0}{I}\frac{a_i^1(n)}{r^{i+1}}.$ avec I= partie entière de (ln(n)/ln(r))\\
+La transformation de la suite de Van der Corput en base r se fait de la manière suivante:\\
+$a_i^d(n)=\sum{j=1}{I}{i \choose j}a_i^{d-1}(n) mod r$\\
+
+D'après nos recherches, la suite de Faure permet contrairement à la suite de Halton en hautes dimensions de mieux remplir l'hypercube gràce a l'utilisation du plus petit nombre premier.\\
+ex:\\
+Halton d=55, la dernière suite de Halton utilise le 55ème nombre premier: 257\\
+Faure d=55, le nombre premier utilisé est 59>257.\\\\
+Malheuresement, la suite de Faure est très couteuse en temps.\\
+Nous avons essayé d'implémenter cette suite pour voir les résultats mais à cause de la récursivité mal optimisé, la génération de la suite de Faure met trop de temps à ce générer au delà de la dimension 4.\\
+
+\newpage
+\subsubsection{Implémentation de la suite de Faure}
+Voici l'implémentation de la suite de Faure:\\
+
+\begin{lstlisting}
+def toDigits2(n, b):
+"""Convert a positive number n to its digit representation in base b."""
+digits = []
+while n > 0:
+digits.insert(0, n % b)
+n  = n // b
+digits.reverse()
+i=0
+for i in range(0,len(digits),1):
+digits[i]/=b**(i+1)
+return digits
+
+def toDigits3(n, b,dim):
+if n!=0:
+I=int(math.log(n)/math.log(b))+1
+else:
+I=0
+z=[]
+a=toDigits2(n,b)
+if dim==1:
+return a
+else:
+for i in range(0,I-1,1):
+h=0
+for j in range(i,I-1,1):
+h+=(comb(i,j)*toDigits3(n,b,dim-1)[i])%b
+z.append(h)
+return z 
+
+def sumDigits(n,b):
+a=toDigits2(n,b)
+return np.sum(a)
+
+def faureF(dim,nsims):
+array=np.empty((dim,nsims))
+p=2
+Prime=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,\
+59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,\
+127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,\
+191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251,\
+257, 263, 269, 271, 277, 281]
+i=0
+for i in range(0,nsims,1):
+array[0,i]=sumDigits(i,2)
+if dim==1:
+"Si la dimension est égale à 1, on prend 2 comme base"
+return array
+else:
+i=0
+while p<dim:
+p=Prime[i+1]
+j=0
+s=1
+for s in range(1,dim,1):
+for j in range(0,nsims,1):
+array[s,j]=np.sum(toDigits3(j,p,s+1))
+return norm.ppf(array)
+ 
+\end{lstlisting}
+
+A refaire si il reste du temps.
 
 
 \end{document}

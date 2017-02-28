@@ -204,6 +204,67 @@ def hammersley(nnoises,nsims):
             hammersley[j,i]=vdc(i,prime)
     return hammersley
 
+"Suite de Faure"
+
+def toDigits2(n, b):
+    """Convert a positive number n to its digit representation in base b."""
+    digits = []
+    while n > 0:
+        digits.insert(0, n % b)
+        n  = n // b
+    digits.reverse()
+    i=0
+    for i in range(0,len(digits),1):
+        digits[i]/=b**(i+1)
+    return digits
+    
+def toDigits3(n, b,dim):
+    if n!=0:
+        I=int(math.log(n)/math.log(b))+1
+    else:
+        I=0
+    z=[]
+    a=toDigits2(n,b)
+    if dim==1:
+        return a
+    else:
+        for i in range(0,I-1,1):
+            h=0
+            for j in range(i,I-1,1):
+                h+=(comb(i,j)*toDigits3(n,b,dim-1)[i])%b
+            z.append(h)
+        return z 
+    
+def sumDigits(n,b):
+        a=toDigits2(n,b)
+        return np.sum(a)
+    
+def faureF(dim,nsims):
+    array=np.empty((dim,nsims))
+    p=2
+    Prime=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,\
+            59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,\
+             127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,\
+              191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251,\
+               257, 263, 269, 271, 277, 281]
+    i=0
+    for i in range(0,nsims,1):
+        array[0,i]=sumDigits(i,2)
+    if dim==1:
+        "Si la dimension est égale à 1, on prend 2 comme base"
+        return array
+    else:
+        i=0
+        while p<dim:
+            p=Prime[i+1]
+        j=0
+        s=1
+        for s in range(1,dim,1):
+            for j in range(0,nsims,1):
+                array[s,j]=np.sum(toDigits3(j,p,s+1))
+        return norm.ppf(array)
+ 
+
 def sobol(nnoises,nsims):
     """
     Renvoie un tableau de valeurs générés par la suite de Sobol

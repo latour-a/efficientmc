@@ -46,7 +46,8 @@ if __name__ == '__main__':
                      "Halton": mc.generators.GaussianGenerator(500, np.array([[1.]]), ["BlackScholes"], mc.generators.halton),
                      "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.halton2),
                      "Halton F": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.haltonF),
-                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.hammersley)}
+                     "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.hammersley),
+                     "Faure": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.faureF)}
     PARTIALMARKETS = {"market": partial(mc.pricemodels.BlackScholesModel, "BlackScholes", 100., 0., 0.2)}
     PARTIALASSETS = [partial(mc.assets.EuropeanCall, name="itm", strike=90., maturity=1.),
                      partial(mc.assets.EuropeanCall, name="atm", strike=100., maturity=1.),

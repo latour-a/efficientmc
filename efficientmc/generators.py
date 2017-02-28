@@ -127,6 +127,8 @@ def van_der_corput_dimension(dim,nsims):
         array[i-2,:]=van_der_corput(nsims, i)
     return array
 
+"Suite de Halton"
+
 def halton(dim,nsims):
     """
     Attention: la fonction crash pour nsims>500, on doit revoir l'optimisation de la fonction
@@ -144,17 +146,6 @@ def halton(dim,nsims):
     data=np.array(norm.ppf(points))
     shape=(dim,nsims)
     return data.reshape(shape)
-
-def sobol(nnoises,nsims):
-    """
-    Renvoie un tableau de valeurs générés par la suite de Sobol
-    de taille (nnoises,nsims)
-    """
-    noises = np.empty((nsims))
-    #  Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
-    # pour générer des variables quasi-aléatoires suivant une loi normale.
-    noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
-    return noises.reshape(nnoises, nsims)
 
 def halton2(dim, nsims):
     """
@@ -182,3 +173,27 @@ def halton2(dim, nsims):
             h[j*dim + i] = somme
 
     return norm.ppf(h.reshape(dim, nsims))
+
+def haltonF(nnoises,nsims):
+    Prime=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,\
+            59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,\
+             127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,\
+              191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251,\
+               257, 263, 269, 271, 277, 281]
+    halton=np.empty((nnoises,nsims))
+    for i in range(0,nsims,1):
+        for j in range(0,nnoises,1):
+            prime=Prime[j]
+            halton[j,i]=vdc(i,prime)
+    return halton
+
+def sobol(nnoises,nsims):
+    """
+    Renvoie un tableau de valeurs générés par la suite de Sobol
+    de taille (nnoises,nsims)
+    """
+    noises = np.empty((nsims))
+    #  Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
+    # pour générer des variables quasi-aléatoires suivant une loi normale.
+    noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
+    return noises.reshape(nnoises, nsims)

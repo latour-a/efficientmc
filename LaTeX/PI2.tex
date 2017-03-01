@@ -836,6 +836,29 @@ $x_n=(a_1(n)V_1\textcircled{+},...,\textcircled{+}a_r(n))$
 	noises=np.transpose(noises)
 	return noises
 \end{lstlisting}
+\newpage
 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.5]{figure_2-halton-random-sample.png}
+	\includegraphics[scale=0.5]{figure_4-sobol.png}
+	\caption{Comparaisons Monte Carlo classique - Suite de Sobol}	
+\end{figure}
+
+\clearpage
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.4]{figure_4-sobol 1000 dimensions 1x2.png}
+	\includegraphics[scale=0.4]{figure_4-sobol 1000 dimensions 14x15.png}
+	\includegraphics[scale=0.4]{figure_4-sobol 1000 dimensions 39x40.png}
+	\caption{Suite de Sobol sous plusieurs dimensions}	
+\end{figure}
+\clearpage
+
+Comme on peut voir sur la graphes précédents, la suite de Sobol présente beaucoup moins de dégradation en hautes dimensions comparés avec la suite de Halton.\\
+
+Nous comparerons un peu plus loin dans ce document les avantages et inconvénients de chaque suite pour pouvoir en utiliser une suivant la situation du problème à résoudre.
 
 \end{document}

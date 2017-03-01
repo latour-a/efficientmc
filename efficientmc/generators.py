@@ -4,6 +4,7 @@ import sobol_seq
 import ghalton as gh
 from scipy.stats import norm
 from math import ceil, fmod, floor, log
+from pyDOE import *
 
 class GaussianGenerator:
     "Générateur de bruits gaussiens corrélés."
@@ -288,3 +289,48 @@ def sobolF(nnoises,nsims):
     noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
     noises=np.transpose(noises)
     return noises
+
+"Stratification"
+
+def stratified_sampling1(M,nsims):
+    array=np.empty(nsims)
+    array=lh.sample(M,nsims)
+    array=norm.ppf(array)
+    return array.reshape(M,nsims)
+
+def stratified_sampling2(nnoises,nsims):
+    """On divise l'intervalle [0,1] en plusieurs stratas, m stratas"""
+    noises = np.empty((nnoises,nsims))
+    m=int(nnoises/nsims)
+    i=0
+    """Pour chaque strata, on prend l échantillons suivant la loi uniforme
+    tel que nsims=m*l et enfin on prend le pdf du cdf."""
+    for i in range(m+1,1):
+        noises[i,:]=norm.ppf(np.random.uniform(i/m,(i+1)/m,nsims))
+    return noises
+
+def stratified_sampling3(l,nsims):
+    """On divisie l'intervalle [0,1] en plusieurs stratas, m stratas"""
+    """m=500"""
+    m=5000
+    l=nsims/m
+    noises=np.empty((l,nsims))
+    for i in range(0,m,1):
+        noises[:,i]=norm.ppf(np.random.uniform(i/m,(i+1)/m,l))
+    return noises
+
+def stratified_sampling4(M,nsims):
+    L=nsims/M
+    i=0
+    noises=np.empty((M,nsims))
+    for i in range(M):
+        noises[i,:]=norm.ppf(np.random.uniform(i/M,(i+1)/M,nsims))
+    return noises
+
+def stratified_samplingF(dim,nsims):
+    "Latin Hypercube Sample, une forme efficient de stratification à plusieurs dimensions"
+    lhd=np.empty((dim,nsims))
+    lhd = lhs(dim, samples=nsims)
+    lhd=norm.ppf(lhd)
+    lhd=np.transpose(lhd)
+    return lhd

@@ -68,7 +68,7 @@ class GaussianGenerator:
             keyidx = self.corrkeys.index(key)
             res[idx, :] = noises[keyidx, :]
         return res
-    
+
 "Variables antithétiques"
 
 def antithetic_randn(nnoises, nsims):
@@ -129,24 +129,6 @@ def van_der_corput_dimension(dim,nsims):
     return array
 
 "Suite de Halton"
-
-def halton(dim,nsims):
-    """
-    Attention: la fonction crash pour nsims>500, on doit revoir l'optimisation de la fonction
-
-    On utilise la librairie Python existante sur la suite de Halton
-
-    GeneralizedHalton produit une suite de nsims dimension (colonnes),
-    le nombre 68 est utilisé pour faire des permutations, c'est le nombre qui permet de se rapprocher
-    le plus des valeurs du Monte Carlo classique
-    """
-    sequence = gh.GeneralizedHalton(nsims,68)
-    "Une liste de dim sous-listes est produite"
-    points=sequence.get(dim)
-    "Pour lire la liste dans une matrice à plusieurs dimensions (dim,nsims)"
-    data=np.array(norm.ppf(points))
-    shape=(dim,nsims)
-    return data.reshape(shape)
 
 def halton2(dim, nsims):
     """
@@ -218,7 +200,7 @@ def toDigits2(n, b):
     for i in range(0,len(digits),1):
         digits[i]/=b**(i+1)
     return digits
-    
+
 def toDigits3(n, b,dim):
     if n!=0:
         I=int(math.log(n)/math.log(b))+1
@@ -234,12 +216,12 @@ def toDigits3(n, b,dim):
             for j in range(i,I-1,1):
                 h+=(comb(i,j)*toDigits3(n,b,dim-1)[i])%b
             z.append(h)
-        return z 
-    
+        return z
+
 def sumDigits(n,b):
         a=toDigits2(n,b)
         return np.sum(a)
-    
+
 def faureF(dim,nsims):
     array=np.empty((dim,nsims))
     p=2
@@ -264,19 +246,8 @@ def faureF(dim,nsims):
             for j in range(0,nsims,1):
                 array[s,j]=np.sum(toDigits3(j,p,s+1))
         return norm.ppf(array)
- 
-"Suite de Sobol"
 
-def sobol(nnoises,nsims):
-    """
-    Renvoie un tableau de valeurs générés par la suite de Sobol
-    de taille (nnoises,nsims)
-    """
-    noises = np.empty((nsims))
-    #  Utilisation de la fonction sobol_seq.i4_sobol_generate_std_normal
-    # pour générer des variables quasi-aléatoires suivant une loi normale.
-    noises = sobol_seq.i4_sobol_generate_std_normal(nnoises, nsims)
-    return noises.reshape(nnoises, nsims)
+"Suite de Sobol"
 
 def sobolF(nnoises,nsims):
     """

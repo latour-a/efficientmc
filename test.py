@@ -42,12 +42,10 @@ if __name__ == '__main__':
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.]]), ["BlackScholes"], mc.generators.antithetic_randn),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.van_der_corput_dimension),
-                     "Halton": mc.generators.GaussianGenerator(500, np.array([[1.]]), ["BlackScholes"], mc.generators.halton),
                      "Halton2": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.halton2),
                      "HaltonF": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.haltonF),
                      "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.hammersley),
                      "Faure": mc.generators.GaussianGenerator(5000, np.array([[1.]]), ["BlackScholes"], mc.generators.faureF),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobol),
                      "SobolF": mc.generators.GaussianGenerator(50000, np.array([[1.]]), ["BlackScholes"], mc.generators.sobolF),
                      "Stratification": mc.generators.GaussianGenerator(50000,np.array([[1.]]),["BlackScholes"],mc.generators.stratified_samplingF)}
     PARTIALMARKETS = {"market": partial(mc.pricemodels.BlackScholesModel, "BlackScholes", 100., 0., 0.2)}
@@ -60,27 +58,23 @@ if __name__ == '__main__':
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.antithetic_randn),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.van_der_corput_dimension),
-                     "Halton": mc.generators.GaussianGenerator(500, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.halton),
                      "Halton2": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.halton2),
                      "HaltonF": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.haltonF),
                      "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.hammersley),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.sobol),
                      "SobolF": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.sobolF),
                      "Stratification": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["BlackScholes1", "BlackScholes2"], mc.generators.stratified_samplingF)}
     PARTIALMARKETS = {"market1": partial(mc.pricemodels.BlackScholesModel, "BlackScholes1", 100., 0., 0.2),
                       "market2": partial(mc.pricemodels.BlackScholesModel, "BlackScholes2", 100., 0., 0.2)}
     PARTIALASSETS = [partial(mc.assets.EuropeanSpread, name="spread", maturity=1.)]
     runtests(ALLGENERATORS, PARTIALMARKETS, PARTIALASSETS)
-    
+
     # Basket option, modèle de Black-Scholes :
     ALLGENERATORS = {"Classique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], np.random.randn),
                      "Antithétique": mc.generators.GaussianGenerator(500000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.antithetic_randn),
                      "Van Der Corput": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.van_der_corput_dimension),
-                     "Halton": mc.generators.GaussianGenerator(500, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.halton),
                      "Halton 2": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.halton2),
                      "Halton F": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.haltonF),
                      "Hammersley": mc.generators.GaussianGenerator(5000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.hammersley),
-                     "Sobol": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.sobol),
                      "SobolF": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.sobolF),
                      "Stratification": mc.generators.GaussianGenerator(50000, np.array([[1.0, 0.5], [0.5, 1.0]]), ["MultiAssetsBlackScholes"], mc.generators.stratified_samplingF)}
     PARTIALMARKETS = {"markets": partial(mc.pricemodels.MultiAssetsBlackScholesModel, "MultiAssetsBlackScholes", 2, np.array([200., 190.]), 0., np.array([0.2, 0.2])) }
